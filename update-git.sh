@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "blah" > test-file.txt
-
 echo "pulling..."
 git pull
 
