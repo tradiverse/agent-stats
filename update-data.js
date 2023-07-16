@@ -2,6 +2,7 @@ import path from 'path';
 import fs from "fs-extra";
 import axios from 'axios';
 import { generateFilename } from './client/shared/generate-filename.js';
+import { exec } from 'child_process';
 
 const url = 'https://api.spacetraders.io/v2/agents';
 
@@ -78,6 +79,17 @@ async function updateData() {
         const totalTime = performance.now() - start;
         const fileTime = totalTime - downloadTime;
         console.log('File saved in ', (fileTime / 1000).toFixed(3), 's', 'Total time:', totalTime.toFixed(3), 's');
+
+        console.log('submitting to github...');
+
+        exec('bash update-data.sh',
+            (error, stdout, stderr) => {
+                console.log('out', stdout);
+                console.log('err', stderr);
+                if (error !== null) {
+                    console.log(`exec error: ${error}`);
+                }
+            });
     } catch (e) {
         console.error('ERROR', e);
     }
