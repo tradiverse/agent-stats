@@ -3,8 +3,11 @@ import fs from "fs-extra";
 import axios from 'axios';
 import { generateFilename } from './client/shared/generate-filename.js';
 import { exec } from 'child_process';
+import { resolve } from 'path';
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-const url = 'https://api.spacetraders.io/v2/agents';
+const AGENT_API_URL = 'https://api.spacetraders.io/v2/agents';
 
 while (true) {
     const time = new Date();
@@ -37,7 +40,7 @@ async function updateData() {
             console.log('Requesting page', page);
             const { data: result } = await axios({
                 method: 'GET',
-                url,
+                url: AGENT_API_URL,
                 params: {
                     page,
                     limit: 20,
@@ -81,15 +84,18 @@ async function updateData() {
         console.log('File saved in ', (fileTime / 1000).toFixed(3), 's', 'Total time:', totalTime.toFixed(3), 's');
 
         console.log('submitting to github...');
-
-        exec('bash update-data.sh',
-            (error, stdout, stderr) => {
+        const scriptPath = resolve(__dirname, 'update-git.sh');
+        exec('bash ' + scriptPath, (error, stdout, stderr) => {
+            if (stdout) {
                 console.log('out', stdout);
+            }
+            if (stderr) {
                 console.log('err', stderr);
-                if (error !== null) {
-                    console.log(`exec error: ${error}`);
-                }
-            });
+            }
+            if (error !== null) {
+                console.log(`exec error: ${error}`);
+            }
+        });
     } catch (e) {
         console.error('ERROR', e);
     }
