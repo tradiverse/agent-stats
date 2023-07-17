@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from "fs-extra";
 import axios from 'axios';
-import { generateFilename } from './client/shared/generate-filename.js';
+import { generateFilename } from '../client/shared/generate-filename.js';
 import { exec } from 'child_process';
 import { resolve } from 'path';
 import * as url from 'url';
@@ -77,7 +77,7 @@ async function updateData() {
 
         console.log('Writing file...');
 
-        await fs.writeJSON(path.resolve('client', 'data', filename), agents);
+        await fs.writeJSON(path.resolve(__dirname, '..', 'client', 'data', filename), agents);
 
         const totalTime = performance.now() - start;
         const fileTime = totalTime - downloadTime;

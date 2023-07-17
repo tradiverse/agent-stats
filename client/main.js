@@ -1,15 +1,7 @@
 import { generateFilename } from './shared/generate-filename.js';
 import { createFilterChart } from './components/filter-chart.js';
 
-const creditFilterSettings = {
-    limit: 20,
-    start: 0,
-};
-
-const shipsFilterSettings = {
-    limit: 20,
-    start: 0,
-};
+const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
 
 // init charts
 const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map(target => createFilterChart({
@@ -61,7 +53,7 @@ updateCharts();
 ////// functions only below /////////////////////////////////////////////////////////////
 
 async function loadDataFile(filename) {
-    const agentResult = await fetch('data/' + filename);
+    const agentResult = await fetch(SERVER_BASE_URL + '/data/' + filename);
     if (!agentResult?.ok) {
         console.error("LOAD AGENT FAIL", agentResult?.status, agentResult?.statusText);
         return [];
