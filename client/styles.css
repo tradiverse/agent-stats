@@ -83,7 +83,7 @@ body {
 @media screen and (max-width: 960px) {
     #filter-pane {
         top: 40px;
-        height: calc(100vh - 40px);
+        height: calc(100vh - 50px);
         transform: translate(-100%, 0);
     }
 
