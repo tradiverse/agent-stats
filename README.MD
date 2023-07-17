@@ -12,6 +12,7 @@ See it in action: [https://tradiverse.github.io/agent-stats/](https://tradiverse
 - Line chart of credits per agent over time
 - Line chart of ships per agent over time
 - Ability to filter to any set of agents
+- Data updates automatically (no need to reload page to see new data)
 - It **mostly** works on mobile!!
 
 
@@ -30,6 +31,8 @@ Clone this repo and install dependencies (`npm i`)
 Every 10 minutes `update-data.js` downloads all the agent data from `https://api.spacetraders.io/v2/agents`, and saves it to a new file in `client/data` and pushes it to this repo.
 
 The web client (`clients/index.html`) tries to download the most recent file (based on the timestamp in the file name) and iterates backward in time to get historical data.
+
+Once all data is loaded the web client will check once a minute for new data and add it to the chart automatically (no need to reload the page)
 
 
 ## How it's built
