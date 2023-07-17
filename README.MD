@@ -5,6 +5,16 @@ A simple web based graphical stats page for [Space Traders](https://spacetraders
 See it in action: [https://tradiverse.github.io/agent-stats/](https://tradiverse.github.io/agent-stats/)
 
 
+## Features
+
+- Bar chart of latest credits per agent
+- Bar chart of latest ships per agent
+- Line chart of credits per agent over time
+- Line chart of ships per agent over time
+- Ability to filter to any set of agents
+- It **mostly** works on mobile!!
+
+
 ## Usage
 
 Clone this repo and install dependencies (`npm i`)

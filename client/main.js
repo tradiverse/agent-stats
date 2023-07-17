@@ -39,6 +39,7 @@ const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map(target
             type: 'category',
             tick: {
                 rotate: 45,
+                multiline: false,
             }
         },
     },
@@ -85,6 +86,7 @@ const filterPane = createFilterPane({
     }
 });
 
+// btn to show/hide filters on mobile
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 btnFilterToggle.addEventListener('click', e => {
     const pane = document.getElementById('filter-pane')
@@ -92,6 +94,8 @@ btnFilterToggle.addEventListener('click', e => {
     pane.classList.toggle('pane-showing', show);
     btnFilterToggle.innerText = show ? 'Hide filters' : 'Show filters';
 });
+
+// select buttons in filter
 document.getElementById('filter-header').addEventListener('click', e => {
     switch (e.target?.id) {
         case 'btn-filter-none':
@@ -122,6 +126,7 @@ setInterval(async () => {
         updateCharts();
     }
 }, 60_000)
+
 
 ////// functions only below /////////////////////////////////////////////////////////////
 
@@ -209,7 +214,7 @@ function updateCharts() {
             }
 
             if (!creditsTimeColumnsMap[v.symbol]) {
-                creditsTimeColumnsMap[v.symbol] = new Array(timeIdx).fill(null);
+                creditsTimeColumnsMap[v.symbol] = new Array(i).fill(null);
             }
             creditsTimeColumnsMap[v.symbol].push(v.credits);
         });
@@ -227,7 +232,7 @@ function updateCharts() {
             }
 
             if (!shipsTimeColumnsMap[v.symbol]) {
-                shipsTimeColumnsMap[v.symbol] = new Array(timeIdx).fill(null);
+                shipsTimeColumnsMap[v.symbol] = new Array(i).fill(null);
             }
             shipsTimeColumnsMap[v.symbol].push(v.shipCount);
         });
