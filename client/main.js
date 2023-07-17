@@ -1,9 +1,8 @@
 import { generateFilename } from './shared/generate-filename.js';
 import { createFilterPane } from './components/filter-pane.js';
 
-const SERVER_BASE_URL = '';
 const INITIAL_LOAD_COUNT = 100;
-// const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
+const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
 
 const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
