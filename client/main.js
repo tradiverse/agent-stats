@@ -59,14 +59,17 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
             type: 'timeseries',
             tick: {
                 format: '%Y-%m-%d %H:%M'
-            }
+            },
         }
+    },
+    tooltip: {
+        grouped: false,
     },
     legend: {
         show: false
     },
-    zoom: {
-        enabled: true,
+    subchart: {
+        show: true,
     },
 }));
 
