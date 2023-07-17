@@ -1,7 +1,9 @@
 import { generateFilename } from './shared/generate-filename.js';
 import { createFilterPane } from './components/filter-pane.js';
 
-const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
+const SERVER_BASE_URL = '';
+const INITIAL_LOAD_COUNT = 100;
+// const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
 
 const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -86,6 +88,9 @@ const filterPane = createFilterPane({
     }
 });
 
+const loading = document.getElementById('loading');
+const loadingLabel = document.getElementById('loading-label');
+
 // btn to show/hide filters on mobile
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 btnFilterToggle.addEventListener('click', e => {
@@ -115,6 +120,8 @@ document.getElementById('filter-header').addEventListener('click', e => {
 
 // load and render initial chart data
 await loadInitialChartData();
+loading.classList.add('loading-hidden');
+
 filterSelectTopCredits()
 updateCharts();
 
@@ -180,10 +187,12 @@ async function tryLoadNextChartData() {
 async function loadInitialChartData() {
     const lastDate = new Date();
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < INITIAL_LOAD_COUNT; i++) {
         lastDate.setMinutes(lastDate.getMinutes() - 10);
         let filename = generateFilename(lastDate);
         let agents = await loadDataFile(filename);
+
+        loadingLabel.innerText = 'Loading ' + Math.floor((i / INITIAL_LOAD_COUNT) * 100) + '%';
 
         if (!agents?.length) {
             break;

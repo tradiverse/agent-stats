@@ -33,6 +33,31 @@ body {
     overflow: hidden;
 }
 
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: black;
+    color: white;
+    display: flex;
+    align-items: center;
+    z-index: 999;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+}
+
+#loading.loading-hidden {
+    opacity: 0;
+}
+
+#loading-label {
+    text-align: center;
+    width: 100%;
+    font-size: 40px;
+}
+
 #filter-pane {
     position: fixed;
     top: 0;
