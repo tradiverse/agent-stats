@@ -1,56 +1,140 @@
 import { generateFilename } from './shared/generate-filename.js';
-import { createFilterChart } from './components/filter-chart.js';
+import { createFilterPane } from './components/filter-pane.js';
 
 const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
 
-// init charts
-const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map(target => createFilterChart({
-    target: document.querySelector(target),
-    chartOptions: {
-        data: {
-            columns: [],
-            type: 'bar',
-            colors: {
-                red: 'red',
-                green: 'green',
-                blue: 'blue',
-            },
-        },
-        bar: {
-            width: {
-                ratio: 0.99,
-            },
+const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+// agents selected in the filter pane { 'AGENT_NAME': boolean }
+const selectedAgents = {};
+// array of arrays of agents sorted by most credits (0 = oldest ... last = latest)
+const creditsSortedAgents = [];
+// array of arrays of agents sorted by most ships (0 = oldest ... last = latest)
+const shipsSortedAgents = [];
+// array of timestamps
+const dateColumns = [];
+
+// init latest bar charts
+const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map(target => c3.generate({
+    bindto: target,
+    data: {
+        x: 'x',
+        columns: [],
+        type: 'bar',
+        color: function (inColor, data) {
+            if (data.index !== undefined) {
+                return colorScale(data.index);
+            }
+
+            return inColor;
         },
     },
+    bar: {
+        width: {
+            ratio: 0.99,
+        },
+    },
+    axis: {
+        x: {
+            type: 'category',
+            tick: {
+                rotate: 45,
+            }
+        },
+    },
+    legend: {
+        show: false
+    }
 }));
 
-const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart-time'].map(target => createFilterChart({
-    target: document.querySelector(target),
-    chartOptions: {
-        data: {
-            x: 'x',
-            columns: [
-            ]
-        },
-        axis: {
-            x: {
-                type: 'timeseries',
-                tick: {
-                    format: '%Y-%m-%d %H:%M'
-                }
+// init over time line charts
+const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart-time'].map(target => c3.generate({
+    bindto: target,
+    data: {
+        x: 'x',
+        columns: []
+    },
+    axis: {
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%Y-%m-%d %H:%M'
             }
         }
     },
+    legend: {
+        show: false
+    },
+    zoom: {
+        enabled: true,
+    },
 }));
 
-// load chart data
+// init filter pane
+const filterPane = createFilterPane({
+    target: document.getElementById('filter-pane'),
+    onChange: (options) => {
+        console.log('ON CHANGE', options);
+        options.forEach(v => {
+            selectedAgents[v.name] = v.checked;
+        });
+        updateCharts();
+    }
+});
+
+const btnFilterToggle = document.getElementById('btn-filter-toggle');
+btnFilterToggle.addEventListener('click', e => {
+    const pane = document.getElementById('filter-pane')
+    const show = !pane.classList.contains('pane-showing');
+    pane.classList.toggle('pane-showing', show);
+    btnFilterToggle.innerText = show ? 'Hide filters' : 'Show filters';
+});
+document.getElementById('filter-header').addEventListener('click', e => {
+    switch (e.target?.id) {
+        case 'btn-filter-none':
+            filterSelectNone();
+            updateCharts();
+            break;
+        case 'btn-filter-credits':
+            filterSelectTopCredits();
+            updateCharts();
+            break;
+        case 'btn-filter-ships':
+            filterSelectTopShips();
+            updateCharts();
+            break;
+    }
+});
+
+// load and render initial chart data
+await loadInitialChartData();
+filterSelectTopCredits()
 updateCharts();
 
-// initForms();
-
-// setInterval(() => updateCharts(), 60_000)
+// try to load new data once a minute
+setInterval(async () => {
+    const result = await tryLoadNextChartData();
+    console.log('try load', result);
+    if (result) {
+        updateCharts();
+    }
+}, 60_000)
 
 ////// functions only below /////////////////////////////////////////////////////////////
+
+function filterSelectNone() {
+    Object.keys(selectedAgents).forEach(v => selectedAgents[v] = false);
+}
+
+function filterSelectTopShips() {
+    filterSelectNone();
+    shipsSortedAgents[shipsSortedAgents.length - 1].slice(0, 20).forEach(v => selectedAgents[v.symbol] = true);
+}
+
+function filterSelectTopCredits() {
+    filterSelectNone();
+    creditsSortedAgents[creditsSortedAgents.length - 1].slice(0, 20).forEach(v => selectedAgents[v.symbol] = true);
+}
 
 async function loadDataFile(filename) {
     const agentResult = await fetch(SERVER_BASE_URL + '/data/' + filename);
@@ -62,15 +146,33 @@ async function loadDataFile(filename) {
     return agentResult.json();
 }
 
-async function updateCharts() {
+async function tryLoadNextChartData() {
+    const lastFilename = generateFilename(dateColumns[dateColumns.length - 1]);
+    const filename = generateFilename();
+    console.log('lastFile', lastFilename, filename);
+    if (lastFilename === filename) {
+        console.log('latest data already loaded');
+        return false;
+    }
+    try {
+        let agents = await loadDataFile(filename);
+        if (agents?.length) {
+            creditsSortedAgents.push(agents.slice().sort((a, b) => b.credits - a.credits));
+            shipsSortedAgents.push(agents.slice().sort((a, b) => b.shipCount - a.shipCount));
+            const date = filename.replace('agents_', '').replace('.json', '')
+            dateColumns.push(new Date(date));
+            return true;
+        }
+    } catch (e) {
+        console.error('FAILED TO NEW CHART DATA', e);
+    }
+    return false;
+}
 
-    let shipsTimeColumns = [];
-    let creditsTimeColumns = [];
-    const dateColumns = [];
-
+async function loadInitialChartData() {
     const lastDate = new Date();
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 50; i++) {
         lastDate.setMinutes(lastDate.getMinutes() - 10);
         let filename = generateFilename(lastDate);
         let agents = await loadDataFile(filename);
@@ -79,40 +181,76 @@ async function updateCharts() {
             break;
         }
 
-        const creditColumns = agents
-            .map(v => [v.symbol, v.credits])
-            .sort(([_, a], [__, b]) => b - a);
+        creditsSortedAgents.unshift(agents.slice().sort((a, b) => b.credits - a.credits));
+        shipsSortedAgents.unshift(agents.slice().sort((a, b) => b.shipCount - a.shipCount));
+        const date = filename.replace('agents_', '').replace('.json', '')
+        dateColumns.unshift(new Date(date));
+    }
+}
 
-        if (i === 0) {
-            const shipColumns = agents
-                .map(v => [v.symbol, v.shipCount])
-                .sort(([_, a], [__, b]) => b - a);
+function updateCharts() {
+    filterPane.updateOptions(creditsSortedAgents[creditsSortedAgents.length - 1].map((v, i) => ({ name: v.symbol, checked: selectedAgents[v.symbol] })));
 
-            shipsChart.load({ columns: shipColumns, unload: true });
-            creditsChart.load({ columns: creditColumns, unload: true });
+    let shipsTimeColumnsMap = {};
+    let creditsTimeColumnsMap = {};
 
-            dateColumns.push('x');
+    const creditsColumns = [['x'], ['credits']];
+    creditsSortedAgents.forEach((item, i) => {
+        item.forEach((v, timeIdx) => {
+            if (selectedAgents[v.symbol] !== true) {
+                return;
+            }
+            if (i === creditsSortedAgents.length - 1) {
+                creditsColumns[0].push(v.symbol);
+                creditsColumns[1].push(v.credits);
+            }
 
-            creditColumns.forEach((v) => {
-                shipsTimeColumns.push(v);
-                creditsTimeColumns.push(v);
-            });
-        }
+            if (!creditsTimeColumnsMap[v.symbol]) {
+                creditsTimeColumnsMap[v.symbol] = new Array(timeIdx).fill(null);
+            }
+            creditsTimeColumnsMap[v.symbol].push(v.credits);
+        });
+    });
 
-        creditColumns.forEach(([symbol, v], i) => {
-            // shipsTimeColumns[i].push(v.shipCount);
-            creditsTimeColumns[i].push(v);
+    const shipsColumns = [['x'], ['ships']];
+    shipsSortedAgents.forEach((item, i) => {
+        item.forEach((v, timeIdx) => {
+            if (selectedAgents[v.symbol] !== true) {
+                return;
+            }
+            if (i === shipsSortedAgents.length - 1) {
+                shipsColumns[0].push(v.symbol);
+                shipsColumns[1].push(v.shipCount);
+            }
+
+            if (!shipsTimeColumnsMap[v.symbol]) {
+                shipsTimeColumnsMap[v.symbol] = new Array(timeIdx).fill(null);
+            }
+            shipsTimeColumnsMap[v.symbol].push(v.shipCount);
+        });
+    });
+
+    shipsChart.load({ columns: shipsColumns });
+    creditsChart.load({ columns: creditsColumns });
+
+    const chartDateColumns = ['x', ...dateColumns];
+    const shipsTimeColumns = [chartDateColumns];
+    Object.entries(shipsTimeColumnsMap)
+        .sort(([_, a], [__, b]) => b[0] - a[0])
+        .forEach(([symbol, v]) => {
+            shipsTimeColumns.push([symbol, ...v]);
         });
 
-        const date = filename.replace('agents_', '').replace('.json', '')
-        dateColumns.push(new Date(date));
-    }
-
-    shipsTimeColumns.unshift(dateColumns);
-    creditsTimeColumns.unshift(dateColumns);
-
+    const creditsTimeColumns = [chartDateColumns];
+    Object.entries(creditsTimeColumnsMap)
+        .sort(([_, a], [__, b]) => b[0] - a[0])
+        .forEach(([symbol, v]) => {
+            creditsTimeColumns.push([symbol, ...v]);
+        });
     console.log('shipsTimeColumns', shipsTimeColumns);
     console.log('creditsTimeColumns', creditsTimeColumns);
-    shipsChartTime.load({ columns: shipsTimeColumns, unload: true });
-    creditsChartTime.load({ columns: creditsTimeColumns, unload: true });
+    const unloadNames = Object.entries(selectedAgents).filter(([k, v]) => v !== true).map(([k, v]) => k);
+    console.log('unloadNames', unloadNames);
+    shipsChartTime.load({ columns: shipsTimeColumns, unload: unloadNames });
+    creditsChartTime.load({ columns: creditsTimeColumns, unload: unloadNames });
 }

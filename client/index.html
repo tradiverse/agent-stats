@@ -15,16 +15,27 @@
 
 <body>
 
-    <a href="https://github.com/tradiverse/agent-stats"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
-
-    <h1>Space Agents</h1>
-    
-    <div id="credits-chart-time"></div>
-    <div id="ships-chart-time"></div>
-    <h3>Agent Credits</h3>
-    <div id="credits-chart"></div>
-    <h3>Agent Ships</h3>
-    <div id="ships-chart"></div>
+    <a href="https://github.com/tradiverse/agent-stats" id="git-banner"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+    <button id="btn-filter-toggle">Show filters</button>
+    <div id="viewport">
+        <div id="filter-pane">
+            <div id="filter-header">
+                <button id="btn-filter-none">Deselect All</button>
+                <button id="btn-filter-credits">Top 20 Credits</button>
+                <button id="btn-filter-ships">Top 20 Ships</button>
+            </div>
+        </div>
+        <div id="chart-pane">
+            <h3>Credits over time</h3>
+            <div id="credits-chart-time"></div>
+            <h3>Ships over time</h3>
+            <div id="ships-chart-time"></div>
+            <h3>Most Credits (latest)</h3>
+            <div id="credits-chart"></div>
+            <h3>Most Ships (latest)</h3>
+            <div id="ships-chart"></div>
+        </div>
+    </div>
 
 </body>
 

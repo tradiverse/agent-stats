@@ -1,0 +1,92 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #444;
+    color: white;
+}
+
+#git-banner {
+    position: fixed;
+    top: 0;
+    right: 0;
+}
+
+#viewport {
+    padding: 0 20px 0 320px;
+    overflow: hidden;
+}
+
+#filter-pane {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 300px;
+    background: black;
+    transition: transform 1s ease-in-out;
+    z-index: 99;
+}
+
+#filter-pane.pane-showing {
+    transform: translate(0, 0);
+}
+
+#btn-filter-toggle {
+    display: none;
+    margin: 5px;
+}
+
+@media screen and (max-width: 960px) {
+    #filter-pane {
+        top: 40px;
+        height: calc(100vh - 40px);
+        transform: translate(-100%, 0);
+    }
+    #viewport {
+        padding-left: 0;
+    }
+    #btn-filter-toggle {
+        display: block;
+    }
+}
+
+#filter-header {
+    height: 25px;
+}
+
+#chart-pane {
+    width: 100%;
+}
+
+#filter-pane .filter-pane-list {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: calc(100% - 40px);
+    padding: 10px;
+}
+
+.filter-check {
+    padding-bottom: 5px;
+}
+
+/* C3 Customization */
+.c3 text {
+    fill: white;
+}
+
+.c3 .domain,
+.c3 .tick line {
+    stroke: white;
+}
+
+.c3-tooltip-container .c3-tooltip {
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.c3-tooltip-container .c3-tooltip td,
+.c3-tooltip-container .c3-tooltip th {
+    background: black;
+}
