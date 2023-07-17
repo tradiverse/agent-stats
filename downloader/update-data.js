@@ -9,6 +9,9 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const AGENT_API_URL = 'https://api.spacetraders.io/v2/agents';
 
+const dataPath = path.resolve(__dirname, '..', 'client', 'data');
+await fs.ensureDir(dataPath);
+
 while (true) {
     const time = new Date();
     const now = time.getTime();
@@ -73,11 +76,9 @@ async function updateData() {
         const downloadTime = performance.now() - start;
         console.log('Download finished in ', (downloadTime / 1000).toFixed(3), 's');
 
-        await fs.ensureDir('data');
-
         console.log('Writing file...');
 
-        await fs.writeJSON(path.resolve(__dirname, '..', 'client', 'data', filename), agents);
+        await fs.writeJSON(path.resolve(dataPath, filename), agents);
 
         const totalTime = performance.now() - start;
         const fileTime = totalTime - downloadTime;

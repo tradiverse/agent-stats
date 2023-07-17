@@ -79,7 +79,6 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
 const filterPane = createFilterPane({
     target: document.getElementById('filter-pane'),
     onChange: (options) => {
-        console.log('ON CHANGE', options);
         options.forEach(v => {
             selectedAgents[v.name] = v.checked;
         });
@@ -127,7 +126,6 @@ updateCharts();
 // try to load new data once a minute
 setInterval(async () => {
     const result = await tryLoadNextChartData();
-    console.log('try load', result);
     if (result) {
         updateCharts();
     }
@@ -163,9 +161,7 @@ async function loadDataFile(filename) {
 async function tryLoadNextChartData() {
     const lastFilename = generateFilename(dateColumns[dateColumns.length - 1]);
     const filename = generateFilename();
-    console.log('lastFile', lastFilename, filename);
     if (lastFilename === filename) {
-        console.log('latest data already loaded');
         return false;
     }
     try {
@@ -212,16 +208,20 @@ function updateCharts() {
 
     const creditsColumns = [['x'], ['credits']];
     creditsSortedAgents.forEach((item, i) => {
-        item.forEach((v, timeIdx) => {
+        item.forEach((v) => {
+            // exclude any non-selected agents
             if (selectedAgents[v.symbol] !== true) {
                 return;
             }
+
+            // if this is the last (latest) entry include it in the bar chart
             if (i === creditsSortedAgents.length - 1) {
                 creditsColumns[0].push(v.symbol);
                 creditsColumns[1].push(v.credits);
             }
 
             if (!creditsTimeColumnsMap[v.symbol]) {
+                // the first time we encounter an agent backfill the array will null if needed
                 creditsTimeColumnsMap[v.symbol] = new Array(i).fill(null);
             }
             creditsTimeColumnsMap[v.symbol].push(v.credits);
@@ -230,16 +230,20 @@ function updateCharts() {
 
     const shipsColumns = [['x'], ['ships']];
     shipsSortedAgents.forEach((item, i) => {
-        item.forEach((v, timeIdx) => {
+        item.forEach((v) => {
+            // exclude any non-selected agents
             if (selectedAgents[v.symbol] !== true) {
                 return;
             }
+
+            // if this is the last (latest) entry include it in the bar chart
             if (i === shipsSortedAgents.length - 1) {
                 shipsColumns[0].push(v.symbol);
                 shipsColumns[1].push(v.shipCount);
             }
 
             if (!shipsTimeColumnsMap[v.symbol]) {
+                // the first time we encounter an agent backfill the array will null if needed
                 shipsTimeColumnsMap[v.symbol] = new Array(i).fill(null);
             }
             shipsTimeColumnsMap[v.symbol].push(v.shipCount);
@@ -263,10 +267,8 @@ function updateCharts() {
         .forEach(([symbol, v]) => {
             creditsTimeColumns.push([symbol, ...v]);
         });
-    console.log('shipsTimeColumns', shipsTimeColumns);
-    console.log('creditsTimeColumns', creditsTimeColumns);
+
     const unloadNames = Object.entries(selectedAgents).filter(([k, v]) => v !== true).map(([k, v]) => k);
-    console.log('unloadNames', unloadNames);
     shipsChartTime.load({ columns: shipsTimeColumns, unload: unloadNames });
     creditsChartTime.load({ columns: creditsTimeColumns, unload: unloadNames });
 }
