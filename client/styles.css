@@ -108,7 +108,7 @@ body {
 #filter-pane .filter-pane-list {
     overflow-x: hidden;
     overflow-y: auto;
-    height: calc(100% - 40px);
+    height: calc(100% - 50px);
     padding: 10px;
 }
 
