@@ -75,6 +75,15 @@ body {
     transform: translate(0, 0);
 }
 
+.filter-color {
+    background: transparent;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
 #btn-filter-toggle {
     display: none;
     margin: 10px 0 0 10px;

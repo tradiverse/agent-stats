@@ -1,13 +1,14 @@
 import { generateFilename } from './shared/generate-filename.js';
 import { createFilterPane } from './components/filter-pane.js';
+import { CHART_COLORS } from './colors.js';
 
 const INITIAL_LOAD_COUNT = 100;
 const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
 
-const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-
 // agents selected in the filter pane { 'AGENT_NAME': boolean }
 const selectedAgents = {};
+// track unique colors per agent that is used across all charts
+let agentColors = {};
 // array of arrays of agents sorted by most credits (0 = oldest ... last = latest)
 const creditsSortedAgents = [];
 // array of arrays of agents sorted by most ships (0 = oldest ... last = latest)
@@ -15,16 +16,35 @@ const shipsSortedAgents = [];
 // array of timestamps
 const dateColumns = [];
 
+function createTooltip(type, name, color, value) {
+    return `
+        <table class="c3-tooltip">
+            <tbody>
+                <tr>
+                    <th colspan="2">${name}</th>
+                </tr>
+                <tr class="c3-tooltip-name--${type}">
+                    <td class="name">
+                        <span style="background-color:${color}"></span>${type}
+                    </td>
+                    <td class="value">${value}</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+}
+
 // init latest bar charts
-const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map(target => c3.generate({
+const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map((target, chartIdx) => c3.generate({
     bindto: target,
     data: {
         x: 'x',
         columns: [],
         type: 'bar',
-        color: function (inColor, data) {
+        color: function (inColor, data, b) {
             if (data.index !== undefined) {
-                return colorScale(data.index);
+                const chart = chartIdx === 0 ? creditsChart : shipsChart;
+                return agentColors[chart.categories()[data.index]];
             }
 
             return inColor;
@@ -46,6 +66,20 @@ const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map(target
     },
     legend: {
         show: false
+    },
+    tooltip: {
+        show: true,
+        contents: function (data, defaultTitleFormat, defaultValueFormat) {
+            if (data && data[0]) {
+                const chart = chartIdx === 0 ? creditsChart : shipsChart;
+                const type = data[0].id;
+                const name = defaultTitleFormat(chart.categories()[data[0].index]);
+                const color = agentColors[name];
+                const value = d3.format(",")(data[0].value);
+                return createTooltip(type, name, color, value);
+            }
+            return 'Failed to generate tooltip';
+        },
     }
 }));
 
@@ -54,7 +88,15 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
     bindto: target,
     data: {
         x: 'x',
-        columns: []
+        columns: [],
+        type: 'line',
+        color: function (inColor, data) {
+            if (data.id !== undefined) {
+                return agentColors[data.id];
+            }
+
+            return inColor;
+        },
     },
     axis: {
         x: {
@@ -66,6 +108,16 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
     },
     tooltip: {
         grouped: false,
+        contents: function (data, defaultTitleFormat, defaultValueFormat) {
+            if (data && data[0]) {
+                const type = data[0].id;
+                const name = defaultTitleFormat(data[0].x);
+                const color = agentColors[type];
+                const value = d3.format(",")(data[0].value);
+                return createTooltip(type, name, color, value);
+            }
+            return 'Failed to generate tooltip';
+        },
     },
     legend: {
         show: false
@@ -201,7 +253,15 @@ async function loadInitialChartData() {
 }
 
 function updateCharts() {
-    filterPane.updateOptions(creditsSortedAgents[creditsSortedAgents.length - 1].map((v, i) => ({ name: v.symbol, checked: selectedAgents[v.symbol] })));
+    agentColors = {};
+    let colorOffset = 0;
+    Object.entries(selectedAgents).forEach(([k, v]) => {
+        if (v === true) {
+            agentColors[k] = CHART_COLORS[colorOffset % CHART_COLORS.length];
+            colorOffset++;
+        }
+    });
+    filterPane.updateOptions(creditsSortedAgents[creditsSortedAgents.length - 1].map((v, i) => ({ name: v.symbol, checked: selectedAgents[v.symbol], color: agentColors[v.symbol] })));
 
     let shipsTimeColumnsMap = {};
     let creditsTimeColumnsMap = {};

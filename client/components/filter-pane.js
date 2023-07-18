@@ -14,13 +14,13 @@ export function createFilterPane({ target, onChange }) {
     });
 
     function updateOptions(options) {
-        list.replaceChildren(...options.map(({ checked, name }, i) => {
+        list.replaceChildren(...options.map(({ checked, name, color }, i) => {
             let id = 'filter-pane-check-' + i;
             const check = createElementWithAttributes('input', { type: 'checkbox', value: name, id, ...(checked ? { checked } : undefined) });
             const checkLabel = createElementWithAttributes('label', { type: 'checkbox', for: id }, name);
+            const checkColor = createElementWithAttributes('span', { class: 'filter-color', style: checked && color ? 'background:' + color : '' });
             const checkWrap = createElementWithAttributes('div', { class: 'filter-check' });
-            checkWrap.appendChild(check);
-            checkWrap.appendChild(checkLabel);
+            checkWrap.append(check, checkLabel, checkColor);
             return checkWrap;
         }));
     }
