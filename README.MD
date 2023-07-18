@@ -15,6 +15,14 @@ See it in action: [https://tradiverse.github.io/agent-stats/](https://tradiverse
 - Data updates automatically (no need to reload page to see new data)
 - It **mostly** works on mobile!!
 
+## TODO
+
+- Move data to a separate repo and clean up commit history
+- Automatically handle server reset
+- Historical line charts
+    - Add ability to load older data
+    - Add ability to reduce granularity (30 minute, 1 hour, ...)
+
 
 ## Usage
 

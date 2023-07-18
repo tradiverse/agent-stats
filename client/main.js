@@ -6,7 +6,7 @@ const INITIAL_LOAD_COUNT = 100;
 const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
 
 // agents selected in the filter pane { 'AGENT_NAME': boolean }
-const selectedAgents = {};
+let selectedAgents = {};
 // track unique colors per agent that is used across all charts
 let agentColors = {};
 // array of arrays of agents sorted by most credits (0 = oldest ... last = latest)
@@ -154,7 +154,7 @@ btnFilterToggle.addEventListener('click', e => {
 document.getElementById('filter-header').addEventListener('click', e => {
     switch (e.target?.id) {
         case 'btn-filter-none':
-            filterSelectNone();
+            filterSelectOnly();
             updateCharts();
             break;
         case 'btn-filter-credits':
@@ -186,20 +186,33 @@ setInterval(async () => {
 
 ////// functions only below /////////////////////////////////////////////////////////////
 
-function filterSelectNone() {
-    Object.keys(selectedAgents).forEach(v => selectedAgents[v] = false);
+/**
+ * Selects only the provided agents
+ */
+function filterSelectOnly(selected = []) {
+    selectedAgents = {};
+    selected.forEach(v => selectedAgents[v] = true);
 }
 
-function filterSelectTopShips() {
-    filterSelectNone();
-    shipsSortedAgents[shipsSortedAgents.length - 1].slice(0, 20).forEach(v => selectedAgents[v.symbol] = true);
+/**
+ * Selects agents with the top ship count
+ */
+function filterSelectTopShips(count = 20) {
+    const topShipsAgents = shipsSortedAgents[shipsSortedAgents.length - 1].slice(0, count).map(v => v.symbol);
+    filterSelectOnly(topShipsAgents);
 }
 
-function filterSelectTopCredits() {
-    filterSelectNone();
-    creditsSortedAgents[creditsSortedAgents.length - 1].slice(0, 20).forEach(v => selectedAgents[v.symbol] = true);
+/**
+ * Selects the agents with the top credits
+ */
+function filterSelectTopCredits(count = 20) {
+    const topCreditsAgents = creditsSortedAgents[creditsSortedAgents.length - 1].slice(0, count).map(v => v.symbol);
+    filterSelectOnly(topCreditsAgents);
 }
 
+/**
+ * Downloads a json data file from the server
+*/
 async function loadDataFile(filename) {
     const agentResult = await fetch(SERVER_BASE_URL + '/data/' + filename);
     if (!agentResult?.ok) {
@@ -210,10 +223,14 @@ async function loadDataFile(filename) {
     return agentResult.json();
 }
 
+/**
+ * Attempts to load the latest data if it has not already been loaded
+ */
 async function tryLoadNextChartData() {
     const lastFilename = generateFilename(dateColumns[dateColumns.length - 1]);
     const filename = generateFilename();
     if (lastFilename === filename) {
+        // latest file name (based on time) is already loaded... exit
         return false;
     }
     try {
@@ -231,6 +248,11 @@ async function tryLoadNextChartData() {
     return false;
 }
 
+/**
+ * Loads the initial chart data on page load
+ * Starts 10 minutes before now to ensure the data will exist, and iterates backward to load older data
+ * The latest (and newer) will be loaded automatically after this is done
+ */
 async function loadInitialChartData() {
     const lastDate = new Date();
 
@@ -252,6 +274,9 @@ async function loadInitialChartData() {
     }
 }
 
+/**
+ * Updates all charts on the page based on the previously loaded data and current filter settings
+ */
 function updateCharts() {
     agentColors = {};
     let colorOffset = 0;
