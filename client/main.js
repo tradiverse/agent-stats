@@ -264,7 +264,7 @@ async function loadInitialChartData() {
         loadingLabel.innerText = 'Loading ' + Math.floor((i / INITIAL_LOAD_COUNT) * 100) + '%';
 
         if (!agents?.length) {
-            break;
+            continue;
         }
 
         creditsSortedAgents.unshift(agents.slice().sort((a, b) => b.credits - a.credits));
