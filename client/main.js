@@ -63,6 +63,11 @@ const [creditsChart, shipsChart] = ['#credits-chart', '#ships-chart'].map((targe
                 multiline: false,
             }
         },
+        y: {
+            tick: {
+                format: d3.format(",")
+            }
+        },
     },
     legend: {
         show: false
@@ -104,7 +109,12 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
             tick: {
                 format: '%Y-%m-%d %H:%M'
             },
-        }
+        },
+        y: {
+            tick: {
+                format: d3.format(",")
+            }
+        },
     },
     tooltip: {
         grouped: false,
