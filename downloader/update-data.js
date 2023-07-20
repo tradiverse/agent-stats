@@ -168,7 +168,7 @@ async function updateData() {
 
         console.log('submitting to github...');
 
-        exec('bash ' + UPDATE_GIT_SCRIPT_PATH, { cwd: dataRepoPath }, (error, stdout, stderr) => {
+        exec('bash ' + UPDATE_GIT_SCRIPT_PATH, { cwd: DATA_REPO_PATH }, (error, stdout, stderr) => {
             if (stdout) {
                 console.log('out', stdout);
             }
