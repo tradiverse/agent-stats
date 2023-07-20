@@ -36,7 +36,7 @@ Clone this repo and install dependencies (`npm i`)
 
 ## How it works
 
-Every 10 minutes `update-data.js` downloads all the agent data from `https://api.spacetraders.io/v2/agents`, and saves it to a new file in `client/data` and pushes it to this repo.
+Every 10 minutes `update-data.js` downloads all the agent data from `https://api.spacetraders.io/v2/agents`, and saves it to a new file in `agent-stats-data/data` and pushes it to the data repo ( https://github.com/tradiverse/agent-stats-data ).
 
 The web client (`clients/index.html`) tries to download the most recent file (based on the timestamp in the file name) and iterates backward in time to get historical data.
 
