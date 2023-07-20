@@ -9,7 +9,10 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const AGENT_API_URL = 'https://api.spacetraders.io/v2/agents';
 
-const dataPath = path.resolve(__dirname, '..', 'client', 'data');
+const dataRepoPath = path.resolve(__dirname, '..', 'agent-stats-data');
+const dataPath = path.resolve(dataRepoPath, 'data');
+const updateGitScriptPath = resolve(dataRepoPath, 'update-git.sh');
+
 await fs.ensureDir(dataPath);
 
 while (true) {
@@ -40,18 +43,41 @@ async function updateData() {
         console.log('START GENERATING', filename);
 
         while (true) {
-            console.log('Requesting page', page);
-            const { data: result } = await axios({
-                method: 'GET',
-                url: AGENT_API_URL,
-                params: {
-                    page,
-                    limit: 20,
-                },
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+
+            let result;
+
+            // retry each http request up to 3 times
+            for (let tryIt = 0; tryIt < 3; tryIt++) {
+                // 2 per second
+                console.log('Pausing...');
+                await new Promise(r => setTimeout(r, 500));
+
+                console.log('Requesting page', page, 'try', tryIt + 1);
+
+                try {
+                    const { data: httpResult } = await axios({
+                        method: 'GET',
+                        url: AGENT_API_URL,
+                        params: {
+                            page,
+                            limit: 20,
+                        },
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (!httpResult?.data) {
+                        throw Error('NO HTTP RESULT DATA IN RETRY LOOP!!')
+                    }
+
+                    // success break out of the retry for loop
+                    result = httpResult;
+                    break;
+                } catch (e) {
+                    console.error('HTTP ERROR', e);
+                }
+            }
 
             if (!result?.data) {
                 throw Error('NO RESULT DATA!!')
@@ -67,10 +93,6 @@ async function updateData() {
             }
 
             page++;
-
-            // 2 per second
-            console.log('Pausing...');
-            await new Promise(r => setTimeout(r, 500));
         }
 
         const downloadTime = performance.now() - start;
@@ -85,8 +107,8 @@ async function updateData() {
         console.log('File saved in ', (fileTime / 1000).toFixed(3), 's', 'Total time:', totalTime.toFixed(3), 's');
 
         console.log('submitting to github...');
-        const scriptPath = resolve(__dirname, 'update-git.sh');
-        exec('bash ' + scriptPath, (error, stdout, stderr) => {
+
+        exec('bash ' + updateGitScriptPath, { cwd: dataRepoPath }, (error, stdout, stderr) => {
             if (stdout) {
                 console.log('out', stdout);
             }

@@ -3,7 +3,8 @@ import { createFilterPane } from './components/filter-pane.js';
 import { CHART_COLORS } from './colors.js';
 
 const INITIAL_LOAD_COUNT = 100;
-const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
+// const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats';
+const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats-data';
 
 // agents selected in the filter pane { 'AGENT_NAME': boolean }
 let selectedAgents = {};
