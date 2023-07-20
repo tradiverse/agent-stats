@@ -14,11 +14,10 @@ See it in action: [https://tradiverse.github.io/agent-stats/](https://tradiverse
 - Ability to filter to any set of agents
 - Data updates automatically (no need to reload page to see new data)
 - It **mostly** works on mobile!!
+- Handles server reset automatically
 
 ## TODO
 
-- Move data to a separate repo and clean up commit history
-- Automatically handle server reset
 - Historical line charts
     - Add ability to load older data
     - Add ability to reduce granularity (30 minute, 1 hour, ...)
