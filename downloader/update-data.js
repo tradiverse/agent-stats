@@ -7,13 +7,22 @@ import { resolve } from 'path';
 import * as url from 'url';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-const AGENT_API_URL = 'https://api.spacetraders.io/v2/agents';
+const BASE_API_URL = 'https://api.spacetraders.io/v2';
+const AGENT_API_URL = BASE_API_URL + '/agents';
 
-const dataRepoPath = path.resolve(__dirname, '..', 'agent-stats-data');
-const dataPath = path.resolve(dataRepoPath, 'data');
-const updateGitScriptPath = resolve(dataRepoPath, 'update-git.sh');
+const DATA_REPO_PATH = path.resolve(__dirname, '..', 'agent-stats-data');
+const DATA_PATH = path.resolve(DATA_REPO_PATH, 'data');
+const UPDATE_GIT_SCRIPT_PATH = resolve(DATA_REPO_PATH, 'update-git.sh');
+const RESET_DATE_PATH = path.resolve(DATA_PATH, '_reset');
 
-await fs.ensureDir(dataPath);
+await fs.ensureDir(DATA_PATH);
+
+let resetDate = '';
+try {
+    resetDate = (await fs.readFile(RESET_DATE_PATH)).toString();
+} catch { }
+
+console.log('Startup reset date =', resetDate);
 
 while (true) {
     const time = new Date();
@@ -28,7 +37,58 @@ while (true) {
     console.log('Pausing', pause, 'ms', (pause / 1000 / 60).toFixed(2), 'minutes');
     await new Promise(resolve => setTimeout(resolve, pause));
 
-    await updateData();
+    try {
+        await checkReset();
+        await updateData();
+    } catch (e) {
+        console.error('MAIN LOOP ERROR', e);
+    }
+}
+
+async function checkReset(tries = 0) {
+    let newReset = '';
+
+    try {
+        const { data: httpResult } = await axios({
+            method: 'GET',
+            url: BASE_API_URL,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!httpResult.resetDate) {
+            throw Error('Failed to get reset date from server');
+        }
+        newReset = httpResult.resetDate;
+    } catch (e) {
+        // retry 3 times (unless a reset is in progress)
+        const status = parseInt(e?.response?.status || 0, 10);
+        const resetInProgress = status === 503 || status > 4100;
+        if (tries < 3 && !resetInProgress) {
+            console.error('CHECK RESET HTTP ERROR', status || e);
+            console.log('Retrying try=', tries);
+            return checkReset(tries + 1);
+        }
+        // re-throw (will try again in 10 minutes)
+        throw new Error(e);
+    }
+
+    if (!resetDate) {
+        console.log('no reset date, saving');
+        fs.writeFile(RESET_DATE_PATH, newReset);
+        resetDate = newReset;
+    } else if (newReset != resetDate) {
+        console.log('RESET DATE CHANGED!!!', resetDate, '->', newReset);
+        // move data
+        await fs.move(DATA_PATH, DATA_PATH + '_' + resetDate + '_' + Date.now());
+        // re-create data directory
+        await fs.ensureDir(DATA_PATH);
+        // save new reset
+        resetDate = newReset;
+        await fs.writeFile(RESET_DATE_PATH, newReset);
+        console.log('RESET COMPLETE');
+    }
 }
 
 async function updateData() {
@@ -100,7 +160,7 @@ async function updateData() {
 
         console.log('Writing file...');
 
-        await fs.writeJSON(path.resolve(dataPath, filename), agents);
+        await fs.writeJSON(path.resolve(DATA_PATH, filename), agents);
 
         const totalTime = performance.now() - start;
         const fileTime = totalTime - downloadTime;
@@ -108,7 +168,7 @@ async function updateData() {
 
         console.log('submitting to github...');
 
-        exec('bash ' + updateGitScriptPath, { cwd: dataRepoPath }, (error, stdout, stderr) => {
+        exec('bash ' + UPDATE_GIT_SCRIPT_PATH, { cwd: dataRepoPath }, (error, stdout, stderr) => {
             if (stdout) {
                 console.log('out', stdout);
             }
