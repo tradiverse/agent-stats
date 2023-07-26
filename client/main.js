@@ -16,6 +16,8 @@ const creditsSortedAgents = [];
 const shipsSortedAgents = [];
 // array of timestamps
 const dateColumns = [];
+// how many data points to display
+let timeChartDataIntervalMinutes = 10;
 
 function createTooltip(type, name, color, value) {
     return `
@@ -151,14 +153,36 @@ const filterPane = createFilterPane({
 
 const loading = document.getElementById('loading');
 const loadingLabel = document.getElementById('loading-label');
+const btnLoadMore = document.getElementById('btn-load-more');
+const lblLoadMore = document.getElementById('lbl-load-more');
+const btnFilterToggle = document.getElementById('btn-filter-toggle');
+const selInterval = document.getElementById('sel-interval');
 
 // btn to show/hide filters on mobile
-const btnFilterToggle = document.getElementById('btn-filter-toggle');
 btnFilterToggle.addEventListener('click', e => {
     const pane = document.getElementById('filter-pane')
     const show = !pane.classList.contains('pane-showing');
     pane.classList.toggle('pane-showing', show);
     btnFilterToggle.innerText = show ? 'Hide filters' : 'Show filters';
+});
+
+btnLoadMore.addEventListener('click', async e => {
+    btnLoadMore.disabled = true;
+    lblLoadMore.innerText = 'Loading...';
+    const loaded = await loadInitialChartData(new Date(dateColumns[0]));
+    updateCharts();
+    if (loaded > 0) {
+        lblLoadMore.innerText = '';
+        btnLoadMore.disabled = false;
+    } else {
+        lblLoadMore.innerText = 'Loaded all data';
+    }
+});
+
+timeChartDataIntervalMinutes = parseInt(selInterval.value, 10);
+selInterval.addEventListener('change', () => {
+    timeChartDataIntervalMinutes = parseInt(selInterval.value, 10);
+    updateCharts();
 });
 
 // select buttons in filter
@@ -264,25 +288,38 @@ async function tryLoadNextChartData() {
  * Starts 10 minutes before now to ensure the data will exist, and iterates backward to load older data
  * The latest (and newer) will be loaded automatically after this is done
  */
-async function loadInitialChartData() {
-    const lastDate = new Date();
+async function loadInitialChartData(lastDate = new Date()) {
+    const results = await Promise.allSettled(new Array(INITIAL_LOAD_COUNT).fill().map(async (_, i) => {
+        const thisDate = new Date(lastDate);
+        thisDate.setMinutes(thisDate.getMinutes() - (10 * (i + 1)));
+        let filename = generateFilename(thisDate);
 
-    for (let i = 0; i < INITIAL_LOAD_COUNT; i++) {
-        lastDate.setMinutes(lastDate.getMinutes() - 10);
-        let filename = generateFilename(lastDate);
         let agents = await loadDataFile(filename);
 
         loadingLabel.innerText = 'Loading ' + Math.floor((i / INITIAL_LOAD_COUNT) * 100) + '%';
 
         if (!agents?.length) {
-            continue;
+            return;
         }
-
-        creditsSortedAgents.unshift(agents.slice().sort((a, b) => b.credits - a.credits));
-        shipsSortedAgents.unshift(agents.slice().sort((a, b) => b.shipCount - a.shipCount));
         const date = filename.replace('agents_', '').replace('.json', '')
-        dateColumns.unshift(new Date(date));
-    }
+        return {
+            credits: agents.slice().sort((a, b) => b.credits - a.credits),
+            ships: agents.slice().sort((a, b) => b.shipCount - a.shipCount),
+            date: new Date(date)
+        }
+    }));
+
+    let successCount = 0;
+    results.forEach(result => {
+        if (!result || result.status !== 'fulfilled' || !result.value) {
+            return;
+        }
+        creditsSortedAgents.unshift(result.value.credits);
+        shipsSortedAgents.unshift(result.value.ships);
+        dateColumns.unshift(result.value.date);
+        successCount++;
+    });
+    return successCount;
 }
 
 /**
@@ -349,19 +386,25 @@ function updateCharts() {
     shipsChart.load({ columns: shipsColumns });
     creditsChart.load({ columns: creditsColumns });
 
-    const chartDateColumns = ['x', ...dateColumns];
+    const chartInterval = timeChartDataIntervalMinutes / 10;
+
+    const dateData = dateColumns.filter((_, i) => i % chartInterval === 0);
+    const chartDateColumns = ['x', ...dateData];
+
     const shipsTimeColumns = [chartDateColumns];
     Object.entries(shipsTimeColumnsMap)
         .sort(([_, a], [__, b]) => b[0] - a[0])
         .forEach(([symbol, v]) => {
-            shipsTimeColumns.push([symbol, ...v]);
+            const data = v.filter((_, i) => i % chartInterval === 0)
+            shipsTimeColumns.push([symbol, ...data]);
         });
 
     const creditsTimeColumns = [chartDateColumns];
     Object.entries(creditsTimeColumnsMap)
         .sort(([_, a], [__, b]) => b[0] - a[0])
         .forEach(([symbol, v]) => {
-            creditsTimeColumns.push([symbol, ...v]);
+            const data = v.filter((_, i) => i % chartInterval === 0)
+            creditsTimeColumns.push([symbol, ...data]);
         });
 
     const unloadNames = Object.entries(selectedAgents).filter(([k, v]) => v !== true).map(([k, v]) => k);
