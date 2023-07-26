@@ -3,34 +3,59 @@ body {
     margin: 0;
     padding: 0;
     font-family: Arial, Helvetica, sans-serif;
-    background: #444;
+    background: #222;
     color: white;
 }
 
+#top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: black;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 999;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+#page-title {
+    color: white;
+    font-weight: bold;
+    padding: 0 10px;
+    text-align: center;
+}
+
 #git-banner {
-    position: absolute;
-    top: 10px;
-    right: 10px;
     padding: 5px;
+    margin-right: 10px;
     background: rgba(255, 255, 255, 0.8);
     border-radius: 4px;
     color: black;
     text-decoration: none;
     display: flex;
     align-items: center;
+    text-align: center;
 }
 
 #git-banner:hover {
     background: rgba(255, 255, 0, 0.8);
 }
 
-#git-banner img {
+.nav-button-img {
     height: 16px;
-    padding-right: 5px;
+}
+
+.nav-button-title {
+    padding-left: 10px;
 }
 
 #viewport {
-    padding: 0 20px 0 360px;
+    padding: 50px 20px 0 360px;
     overflow: hidden;
 }
 
@@ -61,12 +86,13 @@ body {
 
 #filter-pane {
     position: fixed;
-    top: 0;
+    top: 40px;
+    height: calc(100vh - 40px);
     left: 0;
     bottom: 0;
-    height: 100vh;
     width: 350px;
-    background: black;
+    background: #444;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     transition: transform 1s ease-in-out;
     z-index: 99;
 }
@@ -85,31 +111,33 @@ body {
 }
 
 #btn-filter-toggle {
-    position: fixed;
     display: none;
-    margin: 10px 0 0 10px;
+    margin: 0 10px;
 }
 
 @media screen and (max-width: 960px) {
     #filter-pane {
-        top: 40px;
-        height: calc(100vh - 40px);
         transform: translate(-100%, 0);
     }
 
     #viewport {
         padding-left: 0;
-        padding-top: 30px;
     }
 
     #btn-filter-toggle {
         display: block;
     }
+
+    .nav-button-title {
+        display: none;
+    }
 }
 
 #filter-header {
-    padding: 10px;
-    text-align: center;
+    padding: 20px 0 10px 20px;
+}
+#txt-filter-search {
+    width: 80%;
 }
 
 #chart-pane {
@@ -119,7 +147,7 @@ body {
 #filter-pane .filter-pane-list {
     overflow-x: hidden;
     overflow-y: auto;
-    height: calc(100% - 50px);
+    height: calc(100% - 70px);
     padding: 10px;
 }
 
@@ -131,7 +159,7 @@ body {
     padding: 10px;
     margin: 10px 0;
     border-radius: 5px;
-    border: 1px solid rgba(255,255,255,0.6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     display: flex;
     flex-direction: row;
     justify-content: space-between;

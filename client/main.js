@@ -157,13 +157,13 @@ const btnLoadMore = document.getElementById('btn-load-more');
 const lblLoadMore = document.getElementById('lbl-load-more');
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 const selInterval = document.getElementById('sel-interval');
+const txtFilterSearch = document.getElementById('txt-filter-search');
 
 // btn to show/hide filters on mobile
 btnFilterToggle.addEventListener('click', e => {
     const pane = document.getElementById('filter-pane')
     const show = !pane.classList.contains('pane-showing');
     pane.classList.toggle('pane-showing', show);
-    btnFilterToggle.innerText = show ? 'Hide filters' : 'Show filters';
 });
 
 btnLoadMore.addEventListener('click', async e => {
@@ -178,6 +178,8 @@ btnLoadMore.addEventListener('click', async e => {
         lblLoadMore.innerText = 'Loaded all data';
     }
 });
+
+txtFilterSearch.addEventListener('input', () => updateFilterOptions());
 
 timeChartDataIntervalMinutes = parseInt(selInterval.value, 10);
 selInterval.addEventListener('change', () => {
@@ -322,10 +324,8 @@ async function loadInitialChartData(lastDate = new Date()) {
     return successCount;
 }
 
-/**
- * Updates all charts on the page based on the previously loaded data and current filter settings
- */
-function updateCharts() {
+function updateFilterOptions() {
+    const search = txtFilterSearch.value.trim().toUpperCase();
     agentColors = {};
     let colorOffset = 0;
     Object.entries(selectedAgents).forEach(([k, v]) => {
@@ -334,7 +334,14 @@ function updateCharts() {
             colorOffset++;
         }
     });
-    filterPane.updateOptions(creditsSortedAgents[creditsSortedAgents.length - 1].map((v, i) => ({ name: v.symbol, checked: selectedAgents[v.symbol], color: agentColors[v.symbol] })));
+    filterPane.updateOptions(creditsSortedAgents[creditsSortedAgents.length - 1].map((v, i) => ({ name: v.symbol, checked: selectedAgents[v.symbol], color: agentColors[v.symbol], hidden: search && !v.symbol.toUpperCase().includes(search) })));
+}
+
+/**
+ * Updates all charts on the page based on the previously loaded data and current filter settings
+ */
+function updateCharts() {
+    updateFilterOptions();
 
     let shipsTimeColumnsMap = {};
     let creditsTimeColumnsMap = {};

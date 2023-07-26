@@ -18,16 +18,24 @@
     <div id="loading">
         <div id="loading-label">Data Loading...</div>
     </div>
-    <a href="https://github.com/tradiverse/agent-stats" target="_blank" id="git-banner">
-        <img src="images/github.svg"> VIEW SOURCE
-    </a>
-    <button id="btn-filter-toggle">Show filters</button>
+    <div id="top-bar">
+        <button id="btn-filter-toggle">
+            <img class="nav-button-img" src="images/filter.svg">
+        </button>
+        <div id="page-title">SPACE AGENT STATS</div>
+        <a href="https://github.com/tradiverse/agent-stats" target="_blank" id="git-banner">
+            <img class="nav-button-img" src="images/github.svg">
+            <span class="nav-button-title">View Source</span>
+        </a>
+    </div>
     <div id="viewport">
         <div id="filter-pane">
             <div id="filter-header">
                 <button id="btn-filter-none">Deselect All</button>
                 <button id="btn-filter-credits">Top 20 Credits</button>
                 <button id="btn-filter-ships">Top 20 Ships</button>
+                <br><br>
+                <input type="text" placeholder="Search Agents" id="txt-filter-search">
             </div>
         </div>
         <div id="chart-pane">
