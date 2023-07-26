@@ -414,7 +414,8 @@ function updateCharts() {
             creditsTimeColumns.push([symbol, ...data]);
         });
 
-    const unloadNames = Object.entries(selectedAgents).filter(([k, v]) => v !== true).map(([k, v]) => k);
+    const selectedAgentItems = Object.entries(selectedAgents);
+    const unloadNames = selectedAgentItems.length === 0 ? true : selectedAgentItems.filter(([k, v]) => v !== true).map(([k, v]) => k);
     shipsChartTime.load({ columns: shipsTimeColumns, unload: unloadNames });
     creditsChartTime.load({ columns: creditsTimeColumns, unload: unloadNames });
 }
