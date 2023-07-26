@@ -119,6 +119,9 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
             }
         },
     },
+    point: {
+        r: 4,
+    },    
     tooltip: {
         grouped: false,
         contents: function (data, defaultTitleFormat, defaultValueFormat) {
@@ -139,6 +142,55 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
         show: true,
     },
 }));
+
+// init over time line charts
+const creditChangeChartTime = c3.generate({
+    bindto: '#credits-change-chart-time',
+    data: {
+        x: 'x',
+        columns: [],
+        type: 'scatter',
+        color: function (inColor, data) {
+            if (data.id !== undefined) {
+                return agentColors[data.id];
+            }
+
+            return inColor;
+        },
+    },
+    axis: {
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%Y-%m-%d %H:%M'
+            },
+        },
+        y: {
+            tick: {
+                format: d3.format(",")
+            }
+        },
+    },
+    point: {
+        r: 6,
+    },
+    tooltip: {
+        grouped: false,
+        contents: function (data, defaultTitleFormat, defaultValueFormat) {
+            if (data && data[0]) {
+                const type = data[0].id;
+                const name = defaultTitleFormat(data[0].x);
+                const color = agentColors[type];
+                const value = d3.format(",")(data[0].value);
+                return createTooltip(type, name, color, value);
+            }
+            return 'Failed to generate tooltip';
+        },
+    },
+    legend: {
+        show: false
+    },
+});
 
 // init filter pane
 const filterPane = createFilterPane({
@@ -406,16 +458,32 @@ function updateCharts() {
             shipsTimeColumns.push([symbol, ...data]);
         });
 
+    const creditsChangeColumns = [chartDateColumns];
     const creditsTimeColumns = [chartDateColumns];
     Object.entries(creditsTimeColumnsMap)
         .sort(([_, a], [__, b]) => b[0] - a[0])
         .forEach(([symbol, v]) => {
-            const data = v.filter((_, i) => i % chartInterval === 0)
+            let last = null;
+            const creditChange = [];
+            const data = v.filter((credits, i) => {
+                if (i % chartInterval === 0) {
+                    creditChange.push(last === null ? null : credits - last);
+                    last = credits;
+                    return true;
+                } else {
+                    return false;
+                }
+            })
             creditsTimeColumns.push([symbol, ...data]);
+            creditsChangeColumns.push([symbol, ...creditChange]);
         });
+
+
 
     const selectedAgentItems = Object.entries(selectedAgents);
     const unloadNames = selectedAgentItems.length === 0 ? true : selectedAgentItems.filter(([k, v]) => v !== true).map(([k, v]) => k);
     shipsChartTime.load({ columns: shipsTimeColumns, unload: unloadNames });
     creditsChartTime.load({ columns: creditsTimeColumns, unload: unloadNames });
+
+    creditChangeChartTime.load({ columns: creditsChangeColumns, unload: unloadNames });
 }

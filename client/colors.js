@@ -1,10 +1,10 @@
 export const CHART_COLORS = [
     // d3 category 20 scheme
     '#1f77b4',
-    '#aec7e8',
-    '#ff7f0e',
     '#ffbb78',
     '#2ca02c',
+    '#aec7e8',
+    '#ff7f0e',
     '#98df8a',
     '#d62728',
     '#ff9896',
