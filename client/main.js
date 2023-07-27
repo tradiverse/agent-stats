@@ -120,7 +120,7 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
         },
     },
     point: {
-        r: 4,
+        r: 3,
     },    
     tooltip: {
         grouped: false,
@@ -172,7 +172,7 @@ const creditChangeChartTime = c3.generate({
         },
     },
     point: {
-        r: 6,
+        r: 5,
     },
     tooltip: {
         grouped: false,
