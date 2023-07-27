@@ -10,14 +10,15 @@ const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats-data';
 let selectedAgents = {};
 // track unique colors per agent that is used across all charts
 let agentColors = {};
+// how many data points to display
+let timeChartDataIntervalMinutes = 10;
+
 // array of arrays of agents sorted by most credits (0 = oldest ... last = latest)
 const creditsSortedAgents = [];
 // array of arrays of agents sorted by most ships (0 = oldest ... last = latest)
 const shipsSortedAgents = [];
-// array of timestamps
+// array of timestamps (indexes corelate to credits/ships arrays above)
 const dateColumns = [];
-// how many data points to display
-let timeChartDataIntervalMinutes = 10;
 
 function createTooltip(type, name, color, value) {
     return `
@@ -143,7 +144,7 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
     },
 }));
 
-// init over time line charts
+// init credit change over time scatter chart
 const creditChangeChartTime = c3.generate({
     bindto: '#credits-change-chart-time',
     data: {

@@ -16,13 +16,6 @@ See it in action: [https://tradiverse.github.io/agent-stats/](https://tradiverse
 - It **mostly** works on mobile!!
 - Handles server reset automatically
 
-## TODO
-
-- Historical line charts
-    - Add ability to load older data
-    - Add ability to reduce granularity (30 minute, 1 hour, ...)
-
-
 ## Usage
 
 Clone this repo and install dependencies (`npm i`)
