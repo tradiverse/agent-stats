@@ -39,9 +39,13 @@
             </div>
         </div>
         <div id="chart-pane">
-            <h3>Most Credits (latest)</h3>
+            <div class="chart-title-wrap">
+                <h3>Most Credits (latest)</h3>
+            </div>
             <div id="credits-chart"></div>
-            <h3>Most Ships (latest)</h3>
+            <div class="chart-title-wrap">
+                <h3>Most Ships (latest)</h3>
+            </div>
             <div id="ships-chart"></div>
             <div id="time-chart-options">
                 <div>
@@ -59,12 +63,21 @@
                     </select>
                 </div>
             </div>
-            <h3>Total credits</h3>
-            <div id="credits-chart-time"></div>
-            <h3>Credits change</h3>
-            <div id="credits-change-chart-time"></div>
-            <h3>Total ships</h3>
-            <div id="ships-chart-time"></div>
+            <div>
+                <div class="chart-title-wrap">
+                    <h3>Total credits</h3>
+                </div>
+                <div id="credits-chart-time"></div>
+                <div class="chart-title-wrap">
+                    <h3>Credits change</h3>
+                    <div><input type="checkbox" id="check-rolling"> Rolling average</div>
+                </div>
+                <div id="credits-change-chart-time"></div>
+                <div class="chart-title-wrap">
+                    <h3>Total ships</h3>
+                </div>
+                <div id="ships-chart-time"></div>
+            </div>
         </div>
     </div>
 

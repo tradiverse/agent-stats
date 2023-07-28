@@ -122,7 +122,7 @@ const [creditsChartTime, shipsChartTime] = ['#credits-chart-time', '#ships-chart
     },
     point: {
         r: 3,
-    },    
+    },
     tooltip: {
         grouped: false,
         contents: function (data, defaultTitleFormat, defaultValueFormat) {
@@ -211,6 +211,7 @@ const lblLoadMore = document.getElementById('lbl-load-more');
 const btnFilterToggle = document.getElementById('btn-filter-toggle');
 const selInterval = document.getElementById('sel-interval');
 const txtFilterSearch = document.getElementById('txt-filter-search');
+const checkRolling = document.getElementById('check-rolling');
 
 // btn to show/hide filters on mobile
 btnFilterToggle.addEventListener('click', e => {
@@ -239,6 +240,10 @@ selInterval.addEventListener('change', () => {
     timeChartDataIntervalMinutes = parseInt(selInterval.value, 10);
     updateCharts();
 });
+
+checkRolling.addEventListener('change', () => {
+    updateCharts();
+})
 
 // select buttons in filter
 document.getElementById('filter-header').addEventListener('click', e => {
@@ -465,7 +470,7 @@ function updateCharts() {
         .sort(([_, a], [__, b]) => b[0] - a[0])
         .forEach(([symbol, v]) => {
             let last = null;
-            const creditChange = [];
+            let creditChange = [];
             const data = v.filter((credits, i) => {
                 if (i % chartInterval === 0) {
                     creditChange.push(last === null ? null : credits - last);
@@ -474,7 +479,22 @@ function updateCharts() {
                 } else {
                     return false;
                 }
-            })
+            });
+
+            // convert to rolling average
+            if (checkRolling.checked) {
+                const rollingAverageWindowSize = 4;
+                creditChange = creditChange.map((v, i) => {
+                    if (v === null) {
+                        // ignore empty data (first data point has no change)
+                        return null;
+                    }
+                    const start = Math.max(0, i - rollingAverageWindowSize);
+                    const slice = creditChange.slice(start, i + 1)
+                    return Math.round(slice.reduce((acc, v) => v + acc, 0) / slice.length);
+                });
+            }
+
             creditsTimeColumns.push([symbol, ...data]);
             creditsChangeColumns.push([symbol, ...creditChange]);
         });

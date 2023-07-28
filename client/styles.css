@@ -46,6 +46,18 @@ body {
     background: rgba(255, 255, 0, 0.8);
 }
 
+.chart-title-wrap {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: end;
+}
+
+.chart-title-wrap:not(:nth-child(1)) {
+    margin-top: 20px;
+    border-top: 1px dotted white;
+}
+
 .nav-button-img {
     height: 16px;
 }
