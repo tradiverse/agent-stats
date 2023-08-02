@@ -10,8 +10,6 @@ const SERVER_BASE_URL = 'https://tradiverse.github.io/agent-stats-data';
 let selectedAgents = {};
 // track unique colors per agent that is used across all charts
 let agentColors = {};
-// how many data points to display
-let timeChartDataIntervalMinutes = 10;
 
 // array of arrays of agents sorted by most credits (0 = oldest ... last = latest)
 const creditsSortedAgents = [];
@@ -235,9 +233,7 @@ btnLoadMore.addEventListener('click', async e => {
 
 txtFilterSearch.addEventListener('input', () => updateFilterOptions());
 
-timeChartDataIntervalMinutes = parseInt(selInterval.value, 10);
 selInterval.addEventListener('change', () => {
-    timeChartDataIntervalMinutes = parseInt(selInterval.value, 10);
     updateCharts();
 });
 
@@ -267,7 +263,23 @@ document.getElementById('filter-header').addEventListener('click', e => {
 await loadInitialChartData();
 loading.classList.add('loading-hidden');
 
-filterSelectTopCredits()
+// load selected agents from URL
+const queryParams = new URLSearchParams(location.search);
+if (queryParams?.has('agents')) {
+    filterSelectOnly(queryParams.getAll('agents'));
+} else {
+    // if no agents in url default to top 20 by credits
+    filterSelectTopCredits()
+}
+
+if (queryParams?.has('interval')) {
+    selInterval.value = queryParams.get('interval');
+}
+
+if (queryParams?.has('rolling')) {
+    checkRolling.checked = queryParams.get('rolling') === 'true';
+}
+
 updateCharts();
 
 // try to load new data once a minute
@@ -386,13 +398,26 @@ function updateFilterOptions() {
     const search = txtFilterSearch.value.trim().toUpperCase();
     agentColors = {};
     let colorOffset = 0;
+    const urlAgents = [];
+
     Object.entries(selectedAgents).forEach(([k, v]) => {
         if (v === true) {
             agentColors[k] = CHART_COLORS[colorOffset % CHART_COLORS.length];
             colorOffset++;
+            urlAgents.push(k);
         }
     });
     filterPane.updateOptions(creditsSortedAgents[creditsSortedAgents.length - 1].map((v, i) => ({ name: v.symbol, checked: selectedAgents[v.symbol], color: agentColors[v.symbol], hidden: search && !v.symbol.toUpperCase().includes(search) })));
+
+    // update URL to reflect settings
+    var url = new URL(window.location);
+    url.searchParams.delete('agents');
+    if (urlAgents.length > 0) {
+        urlAgents.forEach(v => url.searchParams.append('agents', v));
+    }
+    url.searchParams.set('rolling', !!checkRolling.checked);
+    url.searchParams.set('interval', selInterval.value);
+    window.history.replaceState({}, '', url);
 }
 
 /**
@@ -451,12 +476,12 @@ function updateCharts() {
     shipsChart.load({ columns: shipsColumns });
     creditsChart.load({ columns: creditsColumns });
 
-    const chartInterval = timeChartDataIntervalMinutes / 10;
+    const chartInterval = parseInt(selInterval.value || '10', 10) / 10;
 
     const dateData = dateColumns.filter((_, i) => i % chartInterval === 0);
     const chartDateColumns = ['x', ...dateData];
 
-    const shipsTimeColumns = [chartDateColumns];
+    const shipsTimeColumns = [chartDateColumns.slice()];
     Object.entries(shipsTimeColumnsMap)
         .sort(([_, a], [__, b]) => b[0] - a[0])
         .forEach(([symbol, v]) => {
@@ -464,8 +489,9 @@ function updateCharts() {
             shipsTimeColumns.push([symbol, ...data]);
         });
 
-    const creditsChangeColumns = [chartDateColumns];
-    const creditsTimeColumns = [chartDateColumns];
+    const rollingAverageWindowSize = 4;
+    const creditsChangeColumns = [chartDateColumns.slice()];
+    const creditsTimeColumns = [chartDateColumns.slice()];
     Object.entries(creditsTimeColumnsMap)
         .sort(([_, a], [__, b]) => b[0] - a[0])
         .forEach(([symbol, v]) => {
@@ -483,7 +509,6 @@ function updateCharts() {
 
             // convert to rolling average
             if (checkRolling.checked) {
-                const rollingAverageWindowSize = 4;
                 creditChange = creditChange.map((v, i) => {
                     if (v === null) {
                         // ignore empty data (first data point has no change)
@@ -499,7 +524,10 @@ function updateCharts() {
             creditsChangeColumns.push([symbol, ...creditChange]);
         });
 
-
+    if (checkRolling.checked) {
+        // If rolling average, trim data points before the window size (it is bad data)
+        creditsChangeColumns.forEach(v => v.splice(1, rollingAverageWindowSize));
+    }
 
     const selectedAgentItems = Object.entries(selectedAgents);
     const unloadNames = selectedAgentItems.length === 0 ? true : selectedAgentItems.filter(([k, v]) => v !== true).map(([k, v]) => k);
