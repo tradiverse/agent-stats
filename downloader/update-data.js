@@ -105,10 +105,18 @@ async function updateData(serverInfo) {
 
         const agentsToLoad = Array.from(new Set([
             ...includeAgentsList.map(v => v.trim()),
-            ...serverInfo.leaderboards.mostCredits.map(v => v.agentSymbol.trim()),
-            ...serverInfo.leaderboards.mostSubmittedCharts.map(v => v.agentSymbol.trim()),
-        ]));
-        console.log('agentsToLoad', agentsToLoad.sort());
+            ...(serverInfo?.leaderboards?.mostCredits || []).map(v => v.agentSymbol.trim()),
+            ...(serverInfo?.leaderboards?.mostSubmittedCharts || []).map(v => v.agentSymbol.trim()),
+        ])).filter(v => !!v).sort();
+
+        console.log('agentsToLoad', agentsToLoad);
+
+        // create a starting include list if none exists
+        if (!includeAgentsList?.length) {
+            console.log('Include list does not exist. Creating file...')
+            await fs.writeFile(INCLUDE_AGENTS_PATH, agentsToLoad.join('\n'))
+        }
+
         const agents = await downloadSomeAgents(agentsToLoad);
 
         const downloadTime = performance.now() - start;
