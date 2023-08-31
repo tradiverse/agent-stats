@@ -25,13 +25,12 @@ while (true) {
     time.setMinutes((Math.floor(time.getMinutes() / 10) * 10) + 10);
     const target = time.getTime();
 
-    const pause = 1000; //  target - now;
+    const pause = target - now;
     console.log('Pausing', pause, 'ms', (pause / 1000 / 60).toFixed(2), 'minutes');
     await new Promise(resolve => setTimeout(resolve, pause));
 
     try {
         const serverInfo = await getServerInfo();
-        console.log('serverInfo', serverInfo);
         await checkAndHandleReset(serverInfo.resetDate);
         await updateData(serverInfo);
     } catch (e) {
