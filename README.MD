@@ -4,6 +4,7 @@ A simple web based graphical stats page for [Space Traders](https://spacetraders
 
 See it in action: [https://tradiverse.github.io/agent-stats/](https://tradiverse.github.io/agent-stats/)
 
+If you aren't on the agent stats page, but would like to be submit a PR to [the include file in the data repo](https://github.com/tradiverse/agent-stats-data/blob/main/data/_include). 
 
 ## Features
 
@@ -29,6 +30,8 @@ Clone this repo and install dependencies (`npm i`)
 ## How it works
 
 Every 10 minutes `update-data.js` downloads all the agent data from `https://api.spacetraders.io/v2/agents`, and saves it to a new file in `agent-stats-data/data` and pushes it to the data repo ( https://github.com/tradiverse/agent-stats-data ).
+
+**UPDATE** due to the large number of agents the script no longer monitors "all agents". Instead it manually loads data for everyone in the high score list. Plus, a set list in a file called `_include` in the data repo
 
 The web client (`clients/index.html`) tries to download the most recent file (based on the timestamp in the file name) and iterates backward in time to get historical data.
 
