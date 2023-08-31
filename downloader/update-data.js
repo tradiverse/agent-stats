@@ -104,11 +104,11 @@ async function updateData(serverInfo) {
         } catch { }
 
         const agentsToLoad = Array.from(new Set([
-            ...includeAgentsList,
-            ...serverInfo.leaderboards.mostCredits.map(v => v.agentSymbol),
-            ...serverInfo.leaderboards.mostSubmittedCharts.map(v => v.agentSymbol),
+            ...includeAgentsList.map(v => v.trim()),
+            ...serverInfo.leaderboards.mostCredits.map(v => v.agentSymbol.trim()),
+            ...serverInfo.leaderboards.mostSubmittedCharts.map(v => v.agentSymbol.trim()),
         ]));
-        console.log('agentsToLoad', agentsToLoad);
+        console.log('agentsToLoad', agentsToLoad.sort());
         const agents = await downloadSomeAgents(agentsToLoad);
 
         const downloadTime = performance.now() - start;

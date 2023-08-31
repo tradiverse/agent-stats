@@ -17,6 +17,6 @@ agents.sort((a,b) => b.shipCount - a.shipCount);
 
 topAgents.push(...agents.slice(0, 40));
 
-const topAgentsUnique = Array.from(new Set(topAgents.map(v => v.symbol)));
+const topAgentsUnique = Array.from(new Set(topAgents.map(v => v.symbol))).sort();
 
 await fs.writeFile(INCLUDE_AGENTS_PATH, topAgentsUnique.join('\n'));
